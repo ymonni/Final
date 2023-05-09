@@ -3,19 +3,12 @@ import csv
 from datetime import datetime
 
 class OutputInventory:
-# Class for methods used to create output inventory files from provided input
-# Files created under the output_files directory. This directory is expected to be there
+
     def __init__(self, item_list):
         self.item_list = item_list
 
     def full(self):
-'''
-Creates a csv output file for the entire inventory.
-- items are sorted alphabetically by manufacturer
-- one item per row of the file
-Each item information:
-item ID, manufacturer name, item type, price, service date, damaged
-'''
+
         with open('./output_files/FullInventory.csv', 'w') as file:
             items = self.item_list
 # get order of keys to write to file based on manufacturer
@@ -30,14 +23,7 @@ item ID, manufacturer name, item type, price, service date, damaged
                 file.write('{},{},{},{},{},{}\n'.format(id,man_name,item_type,price,service_date,damaged))
 
     def by_type(self):
-'''
-Creates a csv output file for items based by type (laptop, phone, tower, etc.).
-Each type gets its own file. Type is reflected in the name of file (LaptopInventory.csv, PhoneInventory.csv..).
-- items sorted by item ID
-- one item per row of the file
-Each row of the file contains the data:
-item ID, manufacturer name, price, service date, damaged
-'''
+
         items = self.item_list
         types = []
         keys = sorted(items.keys())
@@ -59,13 +45,7 @@ item ID, manufacturer name, price, service date, damaged
                     file.write('{},{},{},{},{}\n'.format(id, man_name, price, service_date, damaged))
 
     def past_service(self):
-'''
-Creates a csv output file for items which are past the service date (expiration is date executed)
-- items sorted from oldest to most recent
-- one item per row of the file
-item information:
-item ID, manufacturer name, item type, price, service date, damaged
-'''
+
         items = self.item_list
         keys = sorted(items.keys(), key=lambda x: datetime.strptime(items[x]['service_date'], "%m/%d/%Y").date(), reverse=True)
         with open('./output_files/PastServiceDateInventory.csv', 'w') as file:
@@ -84,13 +64,7 @@ item ID, manufacturer name, item type, price, service date, damaged
 
 
     def damaged(self):
-'''
-Creates a csv output file for all items that are damaged.
-- items sorted from most expensive to least expensive
-- one item per fow of the file
-item information:
-item ID, manufacturer name, item type, price, service date
-'''
+
         items = self.item_list
 # get order of keys to write to file based on price
         keys = sorted(items.keys(), key=lambda x: items[x]['price'], reverse=True)
@@ -136,7 +110,7 @@ if __name__ == '__main__':
     inventory.past_service()
     inventory.damaged()
 
-# Get the different manufacturers and types in a list
+
     types = []
     manufacturers = []
     for item in items:
@@ -147,14 +121,14 @@ if __name__ == '__main__':
         if checked_type not in types:
             types.append(checked_type)
 
-# Prompt the user for input
+
     user_input = None
     while user_input != 'q':
         user_input = input("\nPlease enter an item manufacturer and item type (ex: Apple laptop) or enter 'q' to quit:\n")
         if user_input == 'q':
             break
         else:
-# Check each word from user to see if there is a match in manufacturer and item type
+
             selected_manufacturer = None
             selected_type = None
             user_input = user_input.split()
@@ -162,32 +136,28 @@ if __name__ == '__main__':
             for word in user_input:
                 if word in manufacturers:
                     if selected_manufacturer:
-# Should only have one submitted manufacturer
+
                         bad_input = True
                     else:
                         selected_manufacturer = word
                 elif word in types:
                     if selected_type:
-# Should only have one submitted type
+
                         bad_input = True
                     else:
                         selected_type = word
             if not selected_manufacturer or not selected_type or bad_input:
                 print("No such item in inventory")
             else:
-# Ordered list of keys to iterate through based on highest price first
+
                 keys = sorted(items.keys(), key=lambda x: items[x]['price'], reverse=True)
 
-# Get the matching list of items based on user input
-                matching_items = []
 
-# Store items with same type but different manufacturer
-# - item type must match
-# - item must be in inventory and not damaged or past service
+                matching_items = []
                 similar_items = {}
                 for item in keys:
                     if items[item]['item_type'] == selected_type:
-# Don't add damaged items or past service to matched list or similar list
+
                         today = datetime.now().date()
                         service_date = items[item]['service_date']
                         service_expiration = datetime.strptime(service_date, "%m/%d/%Y").date()
@@ -199,7 +169,7 @@ if __name__ == '__main__':
                             if not expired and not items[item]['damaged']:
                                 similar_items[item] = items[item]
 
-# Output the item if matched
+
                 if matching_items:
                     item = matching_items[0]
                     item_id = item[0]
@@ -208,10 +178,9 @@ if __name__ == '__main__':
                     price = item[1]['price']
                     print("Your item is: {}, {}, {}, {}\n".format(item_id, man_name, item_type, price))
 
-# Output item from different manufacturer that is closest in price to matched item
+
                     if similar_items:
                         matched_price = price
-# Get the similar item with the closest price to the initial item
                         closest_item = None
                         closest_price_diff = None
                         for item in similar_items:
