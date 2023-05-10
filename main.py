@@ -42,7 +42,7 @@ class OutputInventory:
                     damaged = items[item]['damaged']
                     item_type = items[item]['item_type']
                     if type == item_type:
-                    file.write('{},{},{},{},{}\n'.format(id, man_name, price, service_date, damaged))
+                        file.write('{},{},{},{},{}\n'.format(id, man_name, price, service_date, damaged))
 
     def past_service(self):
 
