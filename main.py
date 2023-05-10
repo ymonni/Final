@@ -1,114 +1,206 @@
 #Ymonni Simms 2106646
 import csv
-from operator import itemgetter
+from datetime import datetime
 
-#Lists for the csv data in
-ManufacturerList=[]
-PriceList=[]
-ServiceDataList=[]
+class OutputInventory:
 
-#Adding information from cvs to list
-with open("ManufacturerList.csv") as manlist:
-    ml = csv.reader(manlist)
-    for line in ml:
-        ManufacturerList.append(line)
+    def __init__(self, item_list):
+        self.item_list = item_list
 
-with open("PriceList.csv") as pricelist:
-    pl = csv.reader(pricelist)
-    for line in pl:
-        PriceList.append(line)
+    def full(self):
 
-with open("ServiceDatesList.csv") as sdlist:
-    sl = csv.reader(sdlist)
-    for line in sl:
-        ServiceDataList.append(line)
+        with open('./output_files/FullInventory.csv', 'w') as file:
+            items = self.item_list
+# get order of keys to write to file based on manufacturer
+            keys = sorted(items.keys(), key=lambda x: items[x]['manufacturer'])
+            for item in keys:
+                id = item
+                man_name = items[item]['manufacturer']
+                item_type = items[item]['item_type']
+                price = items[item]['price']
+                service_date = items[item]['service_date']
+                damaged = items[item]['damaged']
+                file.write('{},{},{},{},{},{}\n'.format(id,man_name,item_type,price,service_date,damaged))
 
-#sorting the list by the order ID
-new_ManufacturerList=(sorted(ManufacturerList, key=itemgetter(0)))
-new_PriceList=(sorted(PriceList, key=itemgetter(0)))
-new_ServiceDataList=(sorted(ServiceDataList, key=itemgetter(0)))
+    def by_type(self):
 
-#adding the prices and service dates to the list
-for x in range(0,len(new_ManufacturerList)):
-    new_ManufacturerList[x].append(PriceList[x][1])
+        items = self.item_list
+        types = []
+        keys = sorted(items.keys())
+        for item in items:
+            item_type = items[item]['item_type']
+            if item_type not in types:
+                types.append(item_type)
+        for type in types:
+            file_name = type.capitalize() + 'Inventory.csv'
+            with open('./output_files/'+file_name, 'w') as file:
+                for item in keys:
+                    id = item
+                    man_name = items[item]['manufacturer']
+                    price = items[item]['price']
+                    service_date = items[item]['service_date']
+                    damaged = items[item]['damaged']
+                    item_type = items[item]['item_type']
+                    if type == item_type:
+                    file.write('{},{},{},{},{}\n'.format(id, man_name, price, service_date, damaged))
 
-for x in range(0,len(new_ManufacturerList)):
-    new_ManufacturerList[x].append(ServiceDataList[x][1])
+    def past_service(self):
 
-final_list = new_ManufacturerList
+        items = self.item_list
+        keys = sorted(items.keys(), key=lambda x: datetime.strptime(items[x]['service_date'], "%m/%d/%Y").date(), reverse=True)
+        with open('./output_files/PastServiceDateInventory.csv', 'w') as file:
+            for item in keys:
+                id = item
+                man_name = items[item]['manufacturer']
+                item_type = items[item]['item_type']
+                price = items[item]['price']
+                service_date = items[item]['service_date']
+                damaged = items[item]['damaged']
+                today = datetime.now().date()
+                service_expiration = datetime.strptime(service_date, "%m/%d/%Y").date()
+                expired = service_expiration < today
+                if expired:
+                    file.write('{},{},{},{},{},{}\n'.format(id, man_name, item_type, price, service_date, damaged))
 
-full_inventory = (sorted(final_list, key=itemgetter(1)))
 
-#writing in the full inventory file
-with open('FullInventory.csv', 'w') as newfile:
-    fiwrite = csv.writer(newfile)
-    for x in range(0, len(full_inventory)):
-        fiwrite.writerow(full_inventory[x])
+    def damaged(self):
 
-#Making a list for each item type
-item_type = final_list
-tower = []
-laptop = []
-phone = []
+        items = self.item_list
+# get order of keys to write to file based on price
+        keys = sorted(items.keys(), key=lambda x: items[x]['price'], reverse=True)
+        with open('./output_files/DamagedInventory.csv', 'w') as file:
+            for item in keys:
+                id = item
+                man_name = items[item]['manufacturer']
+                item_type = items[item]['item_type']
+                price = items[item]['price']
+                service_date = items[item]['service_date']
+                damaged = items[item]['damaged']
+                if damaged:
+                    file.write('{},{},{},{},{}\n'.format(id, man_name, item_type, price, service_date))
 
-#finding item types and adding them to their lists
-for x in range(0, len(item_type)):
-    if item_type[x][2] == "tower":
-        tower.append(item_type[x])
-    elif item_type[x][2] == "phone":
-        phone.append(item_type[x])
-    elif item_type[x][2] == "laptop":
-        laptop.append(item_type[x])
 
-#creating a file for each item type
-with open('LaptopInventory.csv', 'w') as newfile:
-    liwrite = csv.writer(newfile)
-    for x in range(0, len(laptop)):
-        liwrite.writerow(laptop[x])
+if __name__ == '__main__':
+    items = {}
+    files = ['ManufacturerList.csv', 'PriceList.csv', 'ServiceDatesList.csv']
+    for file in files:
+        with open(file, 'r') as csv_file:
+            csv_reader = csv.reader(csv_file, delimiter=',')
+            for line in csv_reader:
+                item_id = line[0]
+                if file == files[0]:
+                    items[item_id] = {}
+                    man_name = line[1]
+                    item_type = line[2]
+                    damaged = line[3]
+                    items[item_id]['manufacturer'] = man_name.strip()
+                    items[item_id]['item_type'] = item_type.strip()
+                    items[item_id]['damaged'] = damaged
+                elif file == files[1]:
+                    price = line[1]
+                    items[item_id]['price'] = price
+                elif file == files[2]:
+                    service_date = line[1]
+                    items[item_id]['service_date'] = service_date
 
-with open('PhoneInventory.csv', 'w') as newfile:
-    piwrite = csv.writer(newfile)
-    for x in range(0, len(phone)):
-        piwrite.writerow(phone[x])
+    inventory = OutputInventory(items)
+# Create all the output files
+    inventory.full()
+    inventory.by_type()
+    inventory.past_service()
+    inventory.damaged()
 
-with open('TowerInventory.csv', 'w') as newfile:
-    tiwrite = csv.writer(newfile)
-    for x in range(0, len(tower)):
-        tiwrite.writerow(tower[x])
 
-#list for damaged products
-damagedlist = []
+    types = []
+    manufacturers = []
+    for item in items:
+        checked_manufacturer = items[item]['manufacturer']
+        checked_type = items[item]['item_type']
+        if checked_manufacturer not in types:
+            manufacturers.append(checked_manufacturer)
+        if checked_type not in types:
+            types.append(checked_type)
 
-for x in range(0, len(item_type)):
-    if item_type[x][3] == "damaged":
-        damagedlist.append(item_type[x])
 
-damagedlist = (sorted(damagedlist, key=itemgetter(4), reverse=True))
+    user_input = None
+    while user_input != 'q':
+        user_input = input("\nPlease enter an item manufacturer and item type (ex: Apple laptop) or enter 'q' to quit:\n")
+        if user_input == 'q':
+            break
+        else:
 
-#creating a damaged products file
-with open('DamagedInventory.csv', 'w') as newfile:
-    diwrite = csv.writer(newfile)
-    for x in range(0, len(damagedlist)):
-        diwrite.writerow(damagedlist[x])
+            selected_manufacturer = None
+            selected_type = None
+            user_input = user_input.split()
+            bad_input = False
+            for word in user_input:
+                if word in manufacturers:
+                    if selected_manufacturer:
 
-#Asking the user to enter their manufacturer and item type
-user_manuf=str(input("Enter your manufacturer: "))
-user_type = str(input("Please enter your item type: "))
-your_item = []
+                        bad_input = True
+                    else:
+                        selected_manufacturer = word
+                elif word in types:
+                    if selected_type:
 
-#Q is the exit value so while the input does not equal q, execute the program
-while(user_manuf != "q"):
-    for x in range(0, len(final_list)):
-        if user_manuf in final_list[x] and user_type in final_list[x]:
-            your_item.append(final_list[x])
+                        bad_input = True
+                    else:
+                        selected_type = word
+            if not selected_manufacturer or not selected_type or bad_input:
+                print("No such item in inventory")
+            else:
 
-#If nothign was added to the list that means the product does not exist
-    if len(your_item)!= 0:
-        your_item = sorted(your_item , key=itemgetter(4), reverse=True)
-        print("Your Item is: ", your_item[0])
-    else:
-        print("No such item in Inventory")
+                keys = sorted(items.keys(), key=lambda x: items[x]['price'], reverse=True)
 
-    user_manuf=str(input("Enter your manufacturer, or q to exit query:"))
 
-    user_type = str(input("Please enter your item type: "))
+                matching_items = []
+                similar_items = {}
+                for item in keys:
+                    if items[item]['item_type'] == selected_type:
+
+                        today = datetime.now().date()
+                        service_date = items[item]['service_date']
+                        service_expiration = datetime.strptime(service_date, "%m/%d/%Y").date()
+                        expired = service_expiration < today
+                        if items[item]['manufacturer'] == selected_manufacturer:
+                            if not expired and not items[item]['damaged']:
+                                matching_items.append((item, items[item]))
+                        else:
+                            if not expired and not items[item]['damaged']:
+                                similar_items[item] = items[item]
+
+
+                if matching_items:
+                    item = matching_items[0]
+                    item_id = item[0]
+                    man_name = item[1]['manufacturer']
+                    item_type = item[1]['item_type']
+                    price = item[1]['price']
+                    print("Your item is: {}, {}, {}, {}\n".format(item_id, man_name, item_type, price))
+
+
+                    if similar_items:
+                        matched_price = price
+                        closest_item = None
+                        closest_price_diff = None
+                        for item in similar_items:
+                            if closest_price_diff == None:
+                                closest_item = similar_items[item]
+                                closest_price_diff = abs(int(matched_price) - int(similar_items[item]['price']))
+                                item_id = item
+                                man_name = similar_items[item]['manufacturer']
+                                item_type = similar_items[item]['item_type']
+                                price = similar_items[item]['price']
+                                continue
+                            price_diff = abs(int(matched_price) - int(similar_items[item]['price']))
+                            if price_diff < closest_price_diff:
+                                closest_item = item
+                                closest_price_diff = price_diff
+                                item_id = item
+                                man_name = similar_items[item]['manufacturer']
+                                item_type = similar_items[item]['item_type']
+                                price = similar_items[item]['price']
+                    print("You may, also, consider: {}, {}, {}, {}\n".format(item_id, man_name, item_type, price))
+
+                else:
+                    print("No such item in inventory")
