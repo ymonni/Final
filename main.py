@@ -12,7 +12,7 @@ class OutputInventory:
         with open('./output_files/FullInventory.csv', 'w') as file:
             items = self.item_list
 # get order of keys to write to file based on manufacturer
-            keys = sorted(items.keys(), key=lambda x: items[x]['manufacturer'])
+            keys = sorted(items.keys(), key = items[x]['manufacturer'])
             for item in keys:
                 id = item
                 man_name = items[item]['manufacturer']
@@ -47,7 +47,7 @@ class OutputInventory:
     def past_service(self):
 
         items = self.item_list
-        keys = sorted(items.keys(), key=lambda x: datetime.strptime(items[x]['service_date'], "%m/%d/%Y").date(), reverse=True)
+        keys = sorted(items.keys(), key= datetime.strptime(items[x]['service_date'], "%m/%d/%Y").date(), reverse=True)
         with open('./output_files/PastServiceDateInventory.csv', 'w') as file:
             for item in keys:
                 id = item
@@ -67,7 +67,7 @@ class OutputInventory:
 
         items = self.item_list
 # get order of keys to write to file based on price
-        keys = sorted(items.keys(), key=lambda x: items[x]['price'], reverse=True)
+        keys = sorted(items.keys(), key= items[x]['price'], reverse=True)
         with open('./output_files/DamagedInventory.csv', 'w') as file:
             for item in keys:
                 id = item
@@ -150,7 +150,7 @@ if __name__ == '__main__':
                 print("No such item in inventory")
             else:
 
-                keys = sorted(items.keys(), key=lambda x: items[x]['price'], reverse=True)
+                keys = sorted(items.keys(), key = items[x]['price'], reverse=True)
 
 
                 matching_items = []
